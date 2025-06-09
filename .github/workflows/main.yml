@@ -15,10 +15,12 @@ jobs:
       DOCKER_REPOSITORY: daffablqs/workflow-ci  
 
     steps:
+      # Set up job & checkout
       - name: Checkout repo
         uses: actions/checkout@v3
 
-      - name: Setup Miniconda
+      # Setup Python via Miniconda & env setup
+      - name: Setup Miniconda and environment
         uses: conda-incubator/setup-miniconda@v2
         with:
           auto-update-conda: true
@@ -28,34 +30,28 @@ jobs:
           use-mamba: true
           cache: true
 
-      - name: Update Conda and Pip
+      # Check environment details
+      - name: Check environment info
         run: |
-          conda update -n base -c defaults conda --yes
-          conda install pip --yes
+          python --version
+          conda list
+          pip list
 
-      - name: Upgrade pip and Reinstall numpy & matplotlib dependencies
-        run: |
-          pip install --upgrade pip
-          pip install --force-reinstall numpy
-          pip install --force-reinstall matplotlib
-
-      - name: List Installed Packages for Debugging
-        run: pip list
-
-      - name: Clear Pip Cache
-        run: pip cache purge
-
+      # Run MLflow project training
       - name: Run MLflow Project with modelling.py
         shell: bash -l {0}
         run: |
           mlflow run MLProject -e train -P script_name=modelling.py
 
-      - name: Run MLflow Project with modelling_tuning.py
-        shell: bash -l {0}
+      # Get latest MLflow run_id for possible later use
+      - name: Get latest MLflow run_id
+        id: mlflow_run_id
         run: |
-          mlflow run MLProject -e train -P script_name=modelling_tuning.py
+          RUN_ID=$(mlflow runs list --experiment-id 0 --order-by descending --max-results 1 --output json | jq -r '.[0].run_id')
+          echo "run_id=$RUN_ID" >> $GITHUB_OUTPUT
 
-      - name: Upload artifacts
+      # Upload artifacts 
+      - name: Upload artifacts to GitHub
         uses: actions/upload-artifact@v4
         with:
           name: ml-artifacts
@@ -65,14 +61,25 @@ jobs:
             MLProject/metric_info.json
             MLProject/training_confusion_matrix.png
 
-      - name: Login to DockerHub
-        run: echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
-
+      # Build Docker image with MLflow
       - name: Build Docker Image with MLflow
         shell: bash -l {0}
         run: |
           mlflow build-docker -p MLProject -t $DOCKER_REPOSITORY:latest
 
+      # Login Docker Hub
+      - name: Login to DockerHub
+        run: echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
+
+      # Tag Docker Image (optional explicit tagging)
+      - name: Tag Docker Image
+        run: |
+          docker tag $DOCKER_REPOSITORY:latest $DOCKER_REPOSITORY:$GITHUB_SHA
+
+      # Push Docker Image
       - name: Push Docker Image
         run: |
           docker push $DOCKER_REPOSITORY:latest
+          docker push $DOCKER_REPOSITORY:$GITHUB_SHA
+
+      # Post steps handled automatically by GitHub Actions (Post log etc)
