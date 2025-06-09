@@ -60,34 +60,40 @@ jobs:
           python -c "import mlflow; print('mlflow:', mlflow.__version__)"
           python -c "import dagshub; print('dagshub:', dagshub.__version__)"
 
+      - name: Debug MLflow Commands and Version
+        shell: bash -l {0}
+        run: |
+          mlflow --version
+          mlflow experiments create --help
+          mlflow experiments search --help
+
       - name: Initialize MLflow Experiment
         shell: bash -l {0}
         run: |
-          # Use MLflow 2.x compatible commands
           echo "Creating MLflow experiment if needed"
-          if ! mlflow experiments search --experiment-ids 0; then
-            mlflow experiments create --experiment-id 0 --name "Default Experiment"
+          if ! mlflow experiments search --filter "name='Default Experiment'" | grep -q "Default Experiment"; then
+            mlflow experiments create --experiment-name "Default Experiment"
           else
-            echo "Experiment ID 0 already exists"
+            echo "Experiment 'Default Experiment' already exists"
           fi
 
       - name: Run MLflow Project with modelling.py
         shell: bash -l {0}
         run: |
           mlflow run MLProject -e train -P script_name=modelling.py \
-            --experiment-id 0 \
+            --experiment-name "Default Experiment" \
             --no-conda  # Use existing environment
 
       - name: Debug MLflow Runs
         shell: bash -l {0}
         run: |
-          mlflow runs list --experiment-id 0
+          mlflow runs list --experiment-name "Default Experiment"
 
       - name: Get latest MLflow run_id
         id: mlflow_run_id
         shell: bash -l {0}
         run: |
-          RUN_ID=$(mlflow runs list --experiment-id 0 --order-by descending --max-results 1 --output json | jq -r '.[0].run_id')
+          RUN_ID=$(mlflow runs list --experiment-name "Default Experiment" --order-by descending --max-results 1 --output json | jq -r '.[0].run_id')
           echo "run_id=$RUN_ID" >> $GITHUB_OUTPUT
 
       - name: Upload artifacts to GitHub
