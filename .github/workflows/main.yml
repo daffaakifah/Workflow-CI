@@ -61,7 +61,7 @@ jobs:
           python -c "import mlflow; print('mlflow:', mlflow.__version__)"
           python -c "import dagshub; print('dagshub:', dagshub.__version__)"
 
-      - name: Debug MLflow CLI Commands and Version
+      - name: Debug MLflow CLI Options
         shell: bash -l {0}
         run: |
           mlflow --version
@@ -74,13 +74,14 @@ jobs:
           echo "Creating or verifying MLflow experiment named 'Heart Disease Classification'..."
           mlflow experiments create --experiment-name "Heart Disease Classification" || echo "Experiment already exists"
           
-          # Get the experiment ID from the experiment search
-          EXPERIMENT_ID=$(mlflow experiments search --view-type active_only --filter-string "name = 'Heart Disease Classification'" --output json | jq -r '.[0].experiment_id')
+          # Get the experiment ID from the experiment search - using --view correct option
+          EXPERIMENT_ID=$(mlflow experiments search --view active_only --filter-string "name = 'Heart Disease Classification'" --output json | jq -r '.[0].experiment_id')
           
           if [ -z "$EXPERIMENT_ID" ] || [ "$EXPERIMENT_ID" == "null" ]; then
             echo "Error: Experiment ID not found, aborting workflow."
             exit 1
           fi
+          
           echo "Experiment ID: $EXPERIMENT_ID"
           echo "EXPERIMENT_ID=$EXPERIMENT_ID" >> $GITHUB_ENV
 
