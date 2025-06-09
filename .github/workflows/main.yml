@@ -21,7 +21,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.12.7'
+          python-version: '3.9'
 
       - name: Install dependencies
         run: |
@@ -37,7 +37,7 @@ jobs:
           mlflow run MLProject -e train -P script_name=modelling_tuning.py
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ml-artifacts
           path: |
