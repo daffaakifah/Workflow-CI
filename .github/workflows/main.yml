@@ -40,7 +40,7 @@ jobs:
 
       - name: Install additional Python dependencies
         shell: bash -l {0}
-        run: pip install --upgrade dagshub mlflow  # Removed version pinning
+        run: pip install --upgrade dagshub mlflow  # Removed version pinning as per latest instructions
 
       - name: Debug Conda Environment
         shell: bash -l {0}
@@ -67,27 +67,33 @@ jobs:
           mlflow experiments create --help
           mlflow experiments search --help
 
-      # FIXED: Use correct set-experiment command
-      - name: Initialize and Set Active MLflow Experiment
+      # Initialize MLflow Experiment with error handling and explicit ID retrieval
+      - name: Initialize MLflow Experiment
         shell: bash -l {0}
         run: |
           echo "Setting MLflow experiment 'Heart Disease Classification'"
           mlflow experiments create --experiment-name "Heart Disease Classification" || echo "Experiment already exists"
+          EXPERIMENT_ID=$(mlflow experiments search --filter-string "name = 'Heart Disease Classification'" --output json | jq -r '.[0].experiment_id')
+          echo "Experiment ID: $EXPERIMENT_ID"
+          if [ -z "$EXPERIMENT_ID" ]; then
+            echo "Error: Experiment ID not found. Ensure the experiment exists and try again."
+            exit 1
+          fi
+          echo "EXPERIMENT_ID=$EXPERIMENT_ID" >> $GITHUB_ENV
 
-      # Added debug step for active run IDs
+      # Debug active runs for diagnostics
       - name: Debug MLflow Active Runs
         shell: bash -l {0}
         run: |
           echo "MLflow Active Environment Run ID: $(mlflow --environment-run-id || echo 'Not set')"
-          RUN_ID=$(mlflow runs list --experiment-name 'Default Experiment' --order-by descending --max-results 1 --output json | jq -r '.[0].run_id' 2>/dev/null || echo 'None')
+          RUN_ID=$(mlflow runs list --experiment-name 'Heart Disease Classification' --order-by descending --max-results 1 --output json | jq -r '.[0].run_id' 2>/dev/null || echo 'None')
           echo "MLflow Active Run ID: $RUN_ID"
 
-      # Updated MLflow run command with explicit experiment setting
+      # Run MLflow Project explicitly using retrieved experiment ID
       - name: Run MLflow Project with modelling.py
         shell: bash -l {0}
         run: |
-          mlflow run MLProject -e train -P script_name=modelling.py \
-            --experiment-id $(mlflow experiments list --experiment-name "Heart Disease Classification" --output json | jq -r '.[0].experiment_id')
+          mlflow run MLProject -e train -P script_name=modelling.py --experiment-id $EXPERIMENT_ID
 
       - name: Debug MLflow Runs
         shell: bash -l {0}
@@ -98,7 +104,9 @@ jobs:
         id: mlflow_run_id
         shell: bash -l {0}
         run: |
-          echo "MLflow Active Run ID: $(mlflow runs list --experiment-name 'Heart Disease Classification' --order-by descending --max-results 1 --output json | jq -r '.[0].run_id' 2>/dev/null || echo 'None')"
+          RUN_ID=$(mlflow runs list --experiment-name 'Heart Disease Classification' --order-by descending --max-results 1 --output json | jq -r '.[0].run_id' 2>/dev/null || echo 'None')
+          echo "MLflow Active Run ID: $RUN_ID"
+          echo "::set-output name=run_id::$RUN_ID"
 
       - name: Upload artifacts to GitHub
         uses: actions/upload-artifact@v4
