@@ -41,7 +41,7 @@ jobs:
       - name: Install additional Python dependencies
         shell: bash -l {0}
         run: |
-          pip install --upgrade dagshub mlflow
+          pip install --upgrade dagshub mlflow==2.19.0
 
       - name: Debug Conda Installed Packages
         shell: bash -l {0}
@@ -74,7 +74,7 @@ jobs:
           echo "Creating or verifying MLflow experiment named 'Heart Disease Classification'..."
           mlflow experiments create --experiment-name "Heart Disease Classification" || echo "Experiment already exists"
           
-          # Get the experiment ID from the experiment search - using --view correct option
+          # Get the experiment ID from the experiments search with proper flags and filter string
           EXPERIMENT_ID=$(mlflow experiments search --view active_only --filter-string "name = 'Heart Disease Classification'" --output json | jq -r '.[0].experiment_id')
           
           if [ -z "$EXPERIMENT_ID" ] || [ "$EXPERIMENT_ID" == "null" ]; then
