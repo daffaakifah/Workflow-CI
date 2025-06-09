@@ -71,9 +71,8 @@ jobs:
       - name: Initialize and Set Active MLflow Experiment
         shell: bash -l {0}
         run: |
-          echo "Setting MLflow experiment 'Default Experiment'"
-          mlflow experiments create --experiment-name "Default Experiment" || echo "Experiment already exists"
-          mlflow set-experiment --experiment-name "Default Experiment"  # CORRECTED COMMAND
+          echo "Setting MLflow experiment 'Heart Disease Classification'"
+          mlflow experiments create --experiment-name "Heart Disease Classification" || echo "Experiment already exists"
 
       # Added debug step for active run IDs
       - name: Debug MLflow Active Runs
