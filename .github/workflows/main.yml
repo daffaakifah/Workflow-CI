@@ -86,21 +86,19 @@ jobs:
       - name: Run MLflow Project with modelling.py
         shell: bash -l {0}
         run: |
-          mlflow set-experiment --experiment-name "Default Experiment"  # Ensure active experiment
           mlflow run MLProject -e train -P script_name=modelling.py \
-            --experiment-name "Default Experiment"
+            --experiment-id $(mlflow experiments list --experiment-name "Heart Disease Classification" --output json | jq -r '.[0].experiment_id')
 
       - name: Debug MLflow Runs
         shell: bash -l {0}
         run: |
-          mlflow runs list --experiment-name "Default Experiment"
+          mlflow runs list --experiment-name "Heart Disease Classification"
 
       - name: Get latest MLflow run_id
         id: mlflow_run_id
         shell: bash -l {0}
         run: |
-          RUN_ID=$(mlflow runs list --experiment-name "Default Experiment" --order-by descending --max-results 1 --output json | jq -r '.[0].run_id' 2>/dev/null || echo '')
-          echo "run_id=$RUN_ID" >> $GITHUB_OUTPUT
+          echo "MLflow Active Run ID: $(mlflow runs list --experiment-name 'Heart Disease Classification' --order-by descending --max-results 1 --output json | jq -r '.[0].run_id' 2>/dev/null || echo 'None')"
 
       - name: Upload artifacts to GitHub
         uses: actions/upload-artifact@v4
