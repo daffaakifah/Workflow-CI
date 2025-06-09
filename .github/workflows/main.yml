@@ -55,10 +55,18 @@ jobs:
           python -c "import mlflow; print('mlflow:', mlflow.__version__)"
           python -c "import dagshub; print('dagshub:', dagshub.__version__)"
 
+      - name: Ensure MLflow Experiment Exists
+        shell: bash -l {0}
+        run: |
+          mlflow experiments list | grep 'Experiment ID: 0' || mlflow experiments create --experiment-id 0 --name "Default Experiment" || true
+
       - name: Run MLflow Project with modelling.py
         shell: bash -l {0}
         run: |
-          mlflow run MLProject -e train -P script_name=modelling.py --experiment-id 0
+          echo "Active environment: $CONDA_DEFAULT_ENV"
+          mlflow experiments list
+          # Run MLflow project with experiment name, not experiment-id
+          mlflow run MLProject -e train -P script_name=modelling.py --experiment-name "Default Experiment"
 
       - name: Debug MLflow Experiment
         shell: bash -l {0}
