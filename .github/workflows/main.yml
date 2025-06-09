@@ -13,6 +13,7 @@ jobs:
       DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
       DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
       DOCKER_REPOSITORY: daffablqs/workflow-ci
+      MLFLOW_TRACKING_URI: file://${{ github.workspace }}/mlruns  # Explicit local tracking URI
 
     steps:
       - name: Checkout repo
@@ -37,6 +38,10 @@ jobs:
           which python
           python --version
 
+      - name: Install additional Python dependencies
+        shell: bash -l {0}
+        run: pip install dagshub mlflow
+
       - name: Debug Conda Environment
         shell: bash -l {0}
         run: conda list -n mlflow-env
@@ -44,7 +49,7 @@ jobs:
       - name: Install Missing Conda Packages
         shell: bash -l {0}
         run: |
-          conda install -n mlflow-env numpy matplotlib seaborn --yes || echo "Packages possibly already installed or not found."
+          conda install -n mlflow-env numpy matplotlib seaborn --yes
 
       - name: Debug package versions
         shell: bash -l {0}
@@ -55,18 +60,20 @@ jobs:
           python -c "import mlflow; print('mlflow:', mlflow.__version__)"
           python -c "import dagshub; print('dagshub:', dagshub.__version__)"
 
-      - name: Ensure MLflow Experiment Exists
+      - name: Initialize MLflow Experiment
         shell: bash -l {0}
         run: |
-          mlflow experiments list | grep 'Experiment ID: 0' || mlflow experiments create --experiment-id 0 --name "Default Experiment" || true
+          # Ensure experiment ID 0 exists
+          mlflow experiments list || true
+          mlflow experiments create --experiment-id 0 --name "Default Experiment" 2> /dev/null || echo "Experiment already exists"
+          mlflow experiments list
 
       - name: Run MLflow Project with modelling.py
         shell: bash -l {0}
         run: |
-          echo "Active environment: $CONDA_DEFAULT_ENV"
-          mlflow experiments list
-          # Run MLflow project with experiment name, not experiment-id
-          mlflow run MLProject -e train -P script_name=modelling.py --experiment-name "Default Experiment"
+          mlflow run MLProject -e train -P script_name=modelling.py \
+            --experiment-id 0 \
+            --no-conda  # Use existing environment
 
       - name: Debug MLflow Experiment
         shell: bash -l {0}
@@ -76,14 +83,10 @@ jobs:
 
       - name: Get latest MLflow run_id
         id: mlflow_run_id
+        shell: bash -l {0}
         run: |
           RUN_ID=$(mlflow runs list --experiment-id 0 --order-by descending --max-results 1 --output json | jq -r '.[0].run_id')
           echo "run_id=$RUN_ID" >> $GITHUB_OUTPUT
-
-      - name: Install additional Python dependencies if needed
-        shell: bash -l {0}
-        run: |
-          pip install dagshub mlflow
 
       - name: Upload artifacts to GitHub
         uses: actions/upload-artifact@v4
