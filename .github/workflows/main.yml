@@ -36,7 +36,7 @@ jobs:
 
     - name: Run MLflow project retrain
       run: |
-        mlflow run ${{ env.MLFLOW_PROJECT }} -e train -P script_name=modelling.py
+        mlflow run ${{ env.MLFLOW_PROJECT }} -e main
 
     - name: Commit and push model artifacts
       run: |
@@ -59,4 +59,3 @@ jobs:
     - name: Push Docker image
       run: |
         docker push ${{ env.DOCKER_IMAGE }}
-
