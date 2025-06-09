@@ -1,9 +1,7 @@
-name: MLflow Retrain and Docker CI
-
-conda_env: conda.yaml
+name: heart-mlflow-project
 
 entry_points:
-  train:
-    parameters:
-      script_name: {type: str, default: "modelling.py"}
-    command: "python {script_name}"
+  main:
+    command: >
+      python modelling.py
+
