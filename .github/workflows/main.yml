@@ -18,39 +18,24 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v3
 
-      - name: Setup Python
-        uses: actions/setup-python@v4
+      - name: Setup Miniconda
+        uses: conda-incubator/setup-miniconda@v2
         with:
-          python-version: '3.12.7'
-
-      - name: Cache pip packages
-        uses: actions/cache@v3
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
-
-      # Optional jika tetap mau update conda walau virtualenv yang dipakai
-      - name: Update conda (optional)
-        run: |
-          conda update -n base -c defaults conda -y || echo "Conda not installed or update skipped"
-
-      - name: Setup Python Environment and Install Dependencies
-        run: |
-          python -m venv .venv
-          source .venv/bin/activate
-          python -m pip install --upgrade pip
-          pip install mlflow docker dagshub joblib matplotlib seaborn pandas scikit-learn
+          auto-update-conda: true
+          activate-environment: mlflow-env
+          environment-file: MLProject/conda.yaml
+          python-version: 3.12.7
+          use-mamba: true
+          cache: true
 
       - name: Run MLflow Project with modelling.py
+        shell: bash -l {0}
         run: |
-          source .venv/bin/activate
           mlflow run MLProject -e train -P script_name=modelling.py
 
       - name: Run MLflow Project with modelling_tuning.py
+        shell: bash -l {0}
         run: |
-          source .venv/bin/activate
           mlflow run MLProject -e train -P script_name=modelling_tuning.py
 
       - name: Upload artifacts
@@ -67,8 +52,8 @@ jobs:
         run: echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
 
       - name: Build Docker Image with MLflow
+        shell: bash -l {0}
         run: |
-          source .venv/bin/activate
           mlflow build-docker -p MLProject -t $DOCKER_REPOSITORY:latest
 
       - name: Push Docker Image
