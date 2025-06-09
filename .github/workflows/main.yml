@@ -9,7 +9,7 @@ on:
 env:
   REQUIREMENTS_FILE: MLProject/requirements.txt
   DOCKER_IMAGE: daffablqs/workflow-ci
-  MLFLOW_PROJECT: Workflow-CI/MLProject
+  MLFLOW_PROJECT: MLProject
   REPO: ${{ github.repository }}
   BRANCH: main
 
@@ -36,7 +36,7 @@ jobs:
 
       - name: Run MLflow project retrain
         run: |
-          mlflow run ${{ env.MLFLOW_PROJECT }} -e main
+          mlflow run ${{ env.MLFLOW_PROJECT }} 
 
       - name: Commit and push model artifacts
         run: |
