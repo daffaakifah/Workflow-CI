@@ -57,7 +57,14 @@ jobs:
 
       - name: Run MLflow Project with modelling.py
         shell: bash -l {0}
-        run: mlflow run MLProject -e train -P script_name=modelling.py
+        run: |
+          mlflow run MLProject -e train -P script_name=modelling.py --experiment-id 0
+
+      - name: Debug MLflow Experiment
+        shell: bash -l {0}
+        run: |
+          mlflow experiments list
+          mlflow runs list --experiment-id 0
 
       - name: Get latest MLflow run_id
         id: mlflow_run_id
