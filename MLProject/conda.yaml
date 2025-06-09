@@ -2,7 +2,7 @@ channels:
   - conda-forge
 
 dependencies:
-  - python=3.12.7
+  - python=3.11
   - pip<=25.1.1
   - numpy>=1.21.5,<1.25.0  
   - scipy<=1.15.3
