@@ -33,6 +33,18 @@ jobs:
           conda update -n base -c defaults conda --yes
           conda install pip --yes
 
+      - name: Upgrade pip and Reinstall numpy & matplotlib dependencies
+        run: |
+          pip install --upgrade pip
+          pip install --force-reinstall numpy
+          pip install --force-reinstall matplotlib
+
+      - name: List Installed Packages for Debugging
+        run: pip list
+
+      - name: Clear Pip Cache
+        run: pip cache purge
+
       - name: Run MLflow Project with modelling.py
         shell: bash -l {0}
         run: |
