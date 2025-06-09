@@ -37,12 +37,6 @@ jobs:
           conda list
           pip list
 
-      # Install / Upgrade pip and core python libraries forcibly via pip to ensure latest compatible
-      - name: Install / Upgrade pip and core packages
-        run: |
-          pip install --upgrade pip
-          pip install --force-reinstall numpy matplotlib seaborn
-
       # Debug versions of important packages
       - name: Debug package versions
         run: |
