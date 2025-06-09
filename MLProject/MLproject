@@ -1,4 +1,4 @@
-name: Workflow-CI
+name: MLflow Retrain and Docker CI
 
 conda_env: conda.yaml
 
