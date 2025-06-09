@@ -36,7 +36,7 @@ jobs:
 
       - name: Run MLflow project retrain
         run: |
-          mlflow run ${{ env.MLFLOW_PROJECT }} 
+          mlflow run ${{ env.MLFLOW_PROJECT }}
 
       - name: Commit and push model artifacts
         run: |
