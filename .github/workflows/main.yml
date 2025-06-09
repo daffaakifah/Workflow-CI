@@ -12,7 +12,7 @@ jobs:
     env:
       DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
       DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-      DOCKER_REPOSITORY: daffablqs/workflow-ci  # ganti sesuai Docker Hub repo Anda
+      DOCKER_REPOSITORY: daffablqs/workflow-ci  
 
     steps:
       - name: Checkout repo
@@ -23,17 +23,21 @@ jobs:
         with:
           python-version: '3.9'
 
-      - name: Install dependencies
+      - name: Setup Python Environment and Install Dependencies
         run: |
+          python -m venv .venv
+          source .venv/bin/activate
           python -m pip install --upgrade pip
           pip install mlflow docker
 
       - name: Run MLflow Project with modelling.py
         run: |
+          source .venv/bin/activate
           mlflow run MLProject -e train -P script_name=modelling.py
 
       - name: Run MLflow Project with modelling_tuning.py
         run: |
+          source .venv/bin/activate
           mlflow run MLProject -e train -P script_name=modelling_tuning.py
 
       - name: Upload artifacts
@@ -51,6 +55,7 @@ jobs:
 
       - name: Build Docker Image with MLflow
         run: |
+          source .venv/bin/activate
           mlflow build-docker -p MLProject -t $DOCKER_REPOSITORY:latest
 
       - name: Push Docker Image
