@@ -23,6 +23,19 @@ jobs:
         with:
           python-version: '3.12.7'
 
+      - name: Cache pip packages
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      # Optional jika tetap mau update conda walau virtualenv yang dipakai
+      - name: Update conda (optional)
+        run: |
+          conda update -n base -c defaults conda -y || echo "Conda not installed or update skipped"
+
       - name: Setup Python Environment and Install Dependencies
         run: |
           python -m venv .venv
