@@ -1,57 +1,134 @@
-name: MLflow CI
+name: CI Build and Docker Push
 
 on:
   push:
-    paths:
-      - 'MLProject/**'
-  workflow_dispatch:
+    branches:
+      - main
 
 jobs:
-  train-log-and-dockerize:
+  build-and-test:
     runs-on: ubuntu-latest
 
+    env:
+      DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+      DOCKER_REPOSITORY: daffablqs/workflow-ci
+      MLFLOW_TRACKING_URI: file://${{ github.workspace }}/mlruns
+
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v2
+      - name: Checkout repo
+        uses: actions/checkout@v3
 
-    - name: Set up Python
-      uses: actions/setup-python@v3
-      with:
-        python-version: '3.11'
+      - name: Setup Miniconda and environment
+        uses: conda-incubator/setup-miniconda@v2
+        with:
+          auto-update-conda: true
+          activate-environment: mlflow-env
+          environment-file: MLProject/conda.yaml
+          python-version: 3.11
+          use-mamba: true
+          cache: true
+          channels: conda-forge, defaults  
 
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install mlflow
+      - name: Verify Conda Environment Activation
+        shell: bash -l {0}
+        run: |
+          conda info --envs
+          echo "Active environment: $CONDA_DEFAULT_ENV"
+          which python
+          python --version
 
-    - name: Run MLflow Project
-      run: |
-        mlflow run MLProject --env-manager=local
+      - name: Install additional Python dependencies
+        shell: bash -l {0}
+        run: pip install --upgrade dagshub mlflow  # Removed version pinning as per latest instructions
 
-    - name: Commit and push model artifact to GitHub
-      run: |
-        git config user.name 'github-actions'
-        git config user.email 'github-actions@github.com'
-        git add mlruns/*
-        git commit -m 'Update model artifact from MLflow tracking'
-        git push
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Debug Conda Environment
+        shell: bash -l {0}
+        run: conda list -n mlflow-env
 
-    - name: Get latest MLflow model artifact path
-      id: get_model_path
-      run: |
-        MODEL_PATH=$(find mlruns -type d -path "*/artifacts/random_forest_model" | sort -r | head -n 1)
-        echo "Latest model path: $MODEL_PATH"
-        echo "MODEL_PATH=$MODEL_PATH" >> $GITHUB_ENV
+      - name: Install Missing Conda Packages
+        shell: bash -l {0}
+        run: |
+          conda install -n mlflow-env numpy matplotlib seaborn --yes
 
-    - name: Log in to Docker Hub
-      run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
+      - name: Debug package versions
+        shell: bash -l {0}
+        run: |
+          python -c "import numpy; print('numpy:', numpy.__version__)"
+          python -c "import matplotlib; print('matplotlib:', matplotlib.__version__)"
+          python -c "import seaborn; print('seaborn:', seaborn.__version__)"
+          python -c "import mlflow; print('mlflow:', mlflow.__version__)"
+          python -c "import dagshub; print('dagshub:', dagshub.__version__)"
 
-    - name: Build Docker image from latest model artifact
-      run: mlflow models build-docker -m $MODEL_PATH -n msml-model
+      - name: Debug MLflow Commands and Version
+        shell: bash -l {0}
+        run: |
+          mlflow --version
+          mlflow experiments create --help
+          mlflow experiments search --help
 
-    - name: Push Docker image to Docker Hub
-      run: |
-        docker tag msml-model:latest ${{ secrets.DOCKER_HUB_USERNAME }}/msml-model:latest
-        docker push ${{ secrets.DOCKER_HUB_USERNAME }}/msml-model:latest
+      # Initialize MLflow Experiment with error handling and explicit ID retrieval
+      - name: Initialize MLflow Experiment
+        shell: bash -l {0}
+        run: |
+          echo "Setting MLflow experiment 'Heart Disease Classification'"
+          mlflow experiments create --experiment-name "Heart Disease Classification" || echo "Experiment already exists"
+          EXPERIMENT_ID=$(mlflow experiments search --filter-string "name = 'Heart Disease Classification'" --output json | jq -r '.[0].experiment_id')
+          echo "Experiment ID: $EXPERIMENT_ID"
+          if [ -z "$EXPERIMENT_ID" ]; then
+            echo "Error: Experiment ID not found. Ensure the experiment exists and try again."
+            exit 1
+          fi
+          echo "EXPERIMENT_ID=$EXPERIMENT_ID" >> $GITHUB_ENV
+
+      # Debug active runs for diagnostics
+      - name: Debug MLflow Active Runs
+        shell: bash -l {0}
+        run: |
+          echo "MLflow Active Environment Run ID: $(mlflow --environment-run-id || echo 'Not set')"
+          RUN_ID=$(mlflow runs list --experiment-name 'Heart Disease Classification' --order-by descending --max-results 1 --output json | jq -r '.[0].run_id' 2>/dev/null || echo 'None')
+          echo "MLflow Active Run ID: $RUN_ID"
+
+      # Run MLflow Project explicitly using retrieved experiment ID
+      - name: Run MLflow Project with modelling.py
+        shell: bash -l {0}
+        run: |
+          mlflow run MLProject -e train -P script_name=modelling.py --experiment-id $EXPERIMENT_ID
+
+      - name: Debug MLflow Runs
+        shell: bash -l {0}
+        run: |
+          mlflow runs list --experiment-name "Heart Disease Classification"
+
+      - name: Get latest MLflow run_id
+        id: mlflow_run_id
+        shell: bash -l {0}
+        run: |
+          RUN_ID=$(mlflow runs list --experiment-name 'Heart Disease Classification' --order-by descending --max-results 1 --output json | jq -r '.[0].run_id' 2>/dev/null || echo 'None')
+          echo "MLflow Active Run ID: $RUN_ID"
+          echo "::set-output name=run_id::$RUN_ID"
+
+      - name: Upload artifacts to GitHub
+        uses: actions/upload-artifact@v4
+        with:
+          name: ml-artifacts
+          path: |
+            MLProject/model
+            MLProject/estimator.html
+            MLProject/metric_info.json
+            MLProject/training_confusion_matrix.png
+
+      - name: Build Docker Image with MLflow
+        shell: bash -l {0}
+        run: mlflow build-docker -p MLProject -t $DOCKER_REPOSITORY:latest
+
+      - name: Login to DockerHub
+        run: echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
+
+      - name: Tag Docker Image
+        run: docker tag $DOCKER_REPOSITORY:latest $DOCKER_REPOSITORY:$GITHUB_SHA
+
+      - name: Push Docker Image
+        run: |
+          docker push $DOCKER_REPOSITORY:latest
+          docker push $DOCKER_REPOSITORY:$GITHUB_SHA
