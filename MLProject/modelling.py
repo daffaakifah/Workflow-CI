@@ -27,7 +27,7 @@ def main():
     mlflow.set_experiment("Heart Disease Classification")
     mlflow.sklearn.autolog(log_models=False)
 
-    data_path = "MLProject/heart_preprocessing.csv"  
+    data_path = "heart_preprocessing.csv"  
     df = pd.read_csv(data_path)
 
     X = df.drop(columns=['target'])
