@@ -71,15 +71,15 @@ jobs:
       - name: Initialize MLflow Experiment
         shell: bash -l {0}
         run: |
-          echo "Setting MLflow experiment 'Heart Disease Classification'"
-          mlflow experiments create --experiment-name "Heart Disease Classification" || echo "Experiment already exists"
-          EXPERIMENT_ID=$(mlflow experiments search --filter-string "name = 'Heart Disease Classification'" --output json | jq -r '.[0].experiment_id')
-          echo "Experiment ID: $EXPERIMENT_ID"
-          if [ -z "$EXPERIMENT_ID" ]; then
-            echo "Error: Experiment ID not found. Ensure the experiment exists and try again."
-            exit 1
-          fi
-          echo "EXPERIMENT_ID=$EXPERIMENT_ID" >> $GITHUB_ENV
+           echo "Setting MLflow experiment 'Heart Disease Classification'"
+           mlflow experiments create --experiment-name "Heart Disease Classification" || echo "Experiment already exists"
+           EXPERIMENT_ID=$(mlflow experiments list --view 'active_only' | grep "Heart Disease Classification" | awk '{print $1}')
+           echo "Experiment ID: $EXPERIMENT_ID"
+           if [ -z "$EXPERIMENT_ID" ]; then
+             echo "Error: Experiment ID not found. Ensure the experiment exists and try again."
+             exit 1
+           fi
+           echo "EXPERIMENT_ID=$EXPERIMENT_ID" >> $GITHUB_ENV
 
       # Debug active runs for diagnostics
       - name: Debug MLflow Active Runs
