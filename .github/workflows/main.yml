@@ -15,7 +15,6 @@ env:
 
 jobs:
   retrain:
-
     runs-on: ubuntu-latest
 
     steps:
@@ -31,12 +30,11 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r ${{ env.REQUIREMENTS_FILE }}
-          # Install MLflow and dagshub as extra dependencies
           pip install mlflow==2.19.0 dagshub==0.2.10
 
       - name: Run MLflow project retrain
         run: |
-          mlflow run ${{ env.MLFLOW_PROJECT }}
+          mlflow run ${{ env.MLFLOW_PROJECT }} -e main --no-conda
 
       - name: Commit and push model artifacts
         run: |
