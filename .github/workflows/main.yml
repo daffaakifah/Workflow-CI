@@ -63,10 +63,13 @@ jobs:
       - name: Initialize MLflow Experiment
         shell: bash -l {0}
         run: |
-          # Ensure experiment ID 0 exists
-          mlflow experiments list || true
-          mlflow experiments create --experiment-id 0 --name "Default Experiment" 2> /dev/null || echo "Experiment already exists"
-          mlflow experiments list
+          # Use MLflow 2.x compatible commands
+          echo "Creating MLflow experiment if needed"
+          if ! mlflow experiments search --experiment-ids 0; then
+            mlflow experiments create --experiment-id 0 --name "Default Experiment"
+          else
+            echo "Experiment ID 0 already exists"
+          fi
 
       - name: Run MLflow Project with modelling.py
         shell: bash -l {0}
@@ -75,10 +78,9 @@ jobs:
             --experiment-id 0 \
             --no-conda  # Use existing environment
 
-      - name: Debug MLflow Experiment
+      - name: Debug MLflow Runs
         shell: bash -l {0}
         run: |
-          mlflow experiments list
           mlflow runs list --experiment-id 0
 
       - name: Get latest MLflow run_id
