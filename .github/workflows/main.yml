@@ -65,13 +65,13 @@ jobs:
         run: |
           mlflow --version
           mlflow experiments create --help
-          mlflow experiments search --help
+          mlflow experiments list --help
 
       - name: Initialize MLflow Experiment
         shell: bash -l {0}
         run: |
           echo "Creating MLflow experiment if needed"
-          if ! mlflow experiments search --filter "name='Default Experiment'" | grep -q "Default Experiment"; then
+          if ! mlflow experiments list | grep -q "Default Experiment"; then
             mlflow experiments create --experiment-name "Default Experiment"
           else
             echo "Experiment 'Default Experiment' already exists"
@@ -81,8 +81,7 @@ jobs:
         shell: bash -l {0}
         run: |
           mlflow run MLProject -e train -P script_name=modelling.py \
-            --experiment-name "Default Experiment" \
-            --no-conda  # Use existing environment
+            --experiment-name "Default Experiment"
 
       - name: Debug MLflow Runs
         shell: bash -l {0}
