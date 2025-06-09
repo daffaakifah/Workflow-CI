@@ -9,7 +9,7 @@ on:
 env:
   REQUIREMENTS_FILE: MLProject/requirements.txt
   DOCKER_IMAGE: daffablqs/workflow-ci
-  MLFLOW_PROJECT: MLProject
+  MLFLOW_PROJECT: Workflow-CI/MLProject
   REPO: ${{ github.repository }}
   BRANCH: main
 
