@@ -1,0 +1,13 @@
+name: Workflow-CI
+
+conda_env: conda.yaml
+
+entry_points:
+  train:
+    parameters:
+      script_name: {type: str, default: "modelling.py"}
+    command: "python {script_name}"
+  tuning:
+    parameters:
+      script_name: {type: str, default: "modelling_tuning.py"}
+    command: "python {script_name}"
