@@ -15,22 +15,20 @@ jobs:
       DOCKER_REPOSITORY: daffablqs/workflow-ci
 
     steps:
-      # Set up job & checkout
       - name: Checkout repo
         uses: actions/checkout@v3
 
-      # Setup Python via Miniconda & environment setup with mamba
       - name: Setup Miniconda and environment
         uses: conda-incubator/setup-miniconda@v2
         with:
           auto-update-conda: true
           activate-environment: mlflow-env
           environment-file: MLProject/conda.yaml
-          python-version: 3.12.7
+          python-version: 3.11
           use-mamba: true
           cache: true
+          channels: conda-forge, defaults  
 
-      # Verify environment is activated
       - name: Verify Conda Environment Activation
         shell: bash -l {0}
         run: |
@@ -39,21 +37,15 @@ jobs:
           which python
           python --version
 
-      # Force install numpy explicitly into the environment (ensures availability)
-      - name: Install Missing Dependencies (numpy)
+      - name: Debug Conda Environment
+        shell: bash -l {0}
+        run: conda list -n mlflow-env
+
+      - name: Install Missing Conda Packages
         shell: bash -l {0}
         run: |
-          conda install -n mlflow-env numpy --yes
-          conda list -n mlflow-env
+          conda install -n mlflow-env numpy matplotlib seaborn --yes || echo "Packages possibly already installed or not found."
 
-      # Optional: Upgrade pip and reinstall core python packages forcibly
-      - name: Install / Upgrade pip and core packages
-        shell: bash -l {0}
-        run: |
-          pip install --upgrade pip
-          pip install --force-reinstall numpy matplotlib seaborn
-
-      # Debug versions of important packages to confirm installation
       - name: Debug package versions
         shell: bash -l {0}
         run: |
@@ -63,26 +55,21 @@ jobs:
           python -c "import mlflow; print('mlflow:', mlflow.__version__)"
           python -c "import dagshub; print('dagshub:', dagshub.__version__)"
 
-      # Run MLflow project training with your specified script
       - name: Run MLflow Project with modelling.py
         shell: bash -l {0}
-        run: |
-          mlflow run MLProject -e train -P script_name=modelling.py
+        run: mlflow run MLProject -e train -P script_name=modelling.py
 
-      # Get latest MLflow run_id for reference
       - name: Get latest MLflow run_id
         id: mlflow_run_id
         run: |
           RUN_ID=$(mlflow runs list --experiment-id 0 --order-by descending --max-results 1 --output json | jq -r '.[0].run_id')
           echo "run_id=$RUN_ID" >> $GITHUB_OUTPUT
 
-      # Optional install python dependencies for extra scripts or tools if needed
       - name: Install additional Python dependencies if needed
         shell: bash -l {0}
         run: |
-          pip install dagshub mlflow  # sesuaikan kebutuhan anda
+          pip install dagshub mlflow
 
-      # Upload artifacts to GitHub
       - name: Upload artifacts to GitHub
         uses: actions/upload-artifact@v4
         with:
@@ -93,22 +80,16 @@ jobs:
             MLProject/metric_info.json
             MLProject/training_confusion_matrix.png
 
-      # Build Docker image with MLflow
       - name: Build Docker Image with MLflow
         shell: bash -l {0}
-        run: |
-          mlflow build-docker -p MLProject -t $DOCKER_REPOSITORY:latest
+        run: mlflow build-docker -p MLProject -t $DOCKER_REPOSITORY:latest
 
-      # Login to Docker Hub
       - name: Login to DockerHub
         run: echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
 
-      # Tag Docker Image
       - name: Tag Docker Image
-        run: |
-          docker tag $DOCKER_REPOSITORY:latest $DOCKER_REPOSITORY:$GITHUB_SHA
+        run: docker tag $DOCKER_REPOSITORY:latest $DOCKER_REPOSITORY:$GITHUB_SHA
 
-      # Push Docker Images
       - name: Push Docker Image
         run: |
           docker push $DOCKER_REPOSITORY:latest
