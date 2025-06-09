@@ -67,26 +67,27 @@ jobs:
           mlflow experiments create --help
           mlflow experiments search --help
 
-      # Updated experiment initialization with explicit activation
+      # FIXED: Use correct set-experiment command
       - name: Initialize and Set Active MLflow Experiment
         shell: bash -l {0}
         run: |
           echo "Setting MLflow experiment 'Default Experiment'"
           mlflow experiments create --experiment-name "Default Experiment" || echo "Experiment already exists"
-          mlflow experiments set-experiment --experiment-name "Default Experiment"
+          mlflow set-experiment --experiment-name "Default Experiment"  # CORRECTED COMMAND
 
       # Added debug step for active run IDs
       - name: Debug MLflow Active Runs
         shell: bash -l {0}
         run: |
-          echo "MLflow Active Environment Run ID: $(mlflow --environment-run-id)"
-          echo "MLflow Active Run ID: $(mlflow runs list --experiment-name 'Default Experiment' --order-by descending --max-results 1 --output json | jq -r '.[0].run_id')"
+          echo "MLflow Active Environment Run ID: $(mlflow --environment-run-id || echo 'Not set')"
+          RUN_ID=$(mlflow runs list --experiment-name 'Default Experiment' --order-by descending --max-results 1 --output json | jq -r '.[0].run_id' 2>/dev/null || echo 'None')
+          echo "MLflow Active Run ID: $RUN_ID"
 
       # Updated MLflow run command with explicit experiment setting
       - name: Run MLflow Project with modelling.py
         shell: bash -l {0}
         run: |
-          mlflow set-experiment --experiment-name "Default Experiment"
+          mlflow set-experiment --experiment-name "Default Experiment"  # Ensure active experiment
           mlflow run MLProject -e train -P script_name=modelling.py \
             --experiment-name "Default Experiment"
 
@@ -99,7 +100,7 @@ jobs:
         id: mlflow_run_id
         shell: bash -l {0}
         run: |
-          RUN_ID=$(mlflow runs list --experiment-name "Default Experiment" --order-by descending --max-results 1 --output json | jq -r '.[0].run_id')
+          RUN_ID=$(mlflow runs list --experiment-name "Default Experiment" --order-by descending --max-results 1 --output json | jq -r '.[0].run_id' 2>/dev/null || echo '')
           echo "run_id=$RUN_ID" >> $GITHUB_OUTPUT
 
       - name: Upload artifacts to GitHub
