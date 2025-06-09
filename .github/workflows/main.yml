@@ -1,0 +1,58 @@
+name: CI Build and Docker Push
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    env:
+      DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+      DOCKER_REPOSITORY: daffablqs/workflow-ci  # ganti sesuai Docker Hub repo Anda
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12.7'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install mlflow docker
+
+      - name: Run MLflow Project with modelling.py
+        run: |
+          mlflow run MLProject -e train -P script_name=modelling.py
+
+      - name: Run MLflow Project with modelling_tuning.py
+        run: |
+          mlflow run MLProject -e train -P script_name=modelling_tuning.py
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: ml-artifacts
+          path: |
+            MLProject/model
+            MLProject/estimator.html
+            MLProject/metric_info.json
+            MLProject/training_confusion_matrix.png
+
+      - name: Login to DockerHub
+        run: echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
+
+      - name: Build Docker Image with MLflow
+        run: |
+          mlflow build-docker -p MLProject -t $DOCKER_REPOSITORY:latest
+
+      - name: Push Docker Image
+        run: |
+          docker push $DOCKER_REPOSITORY:latest
