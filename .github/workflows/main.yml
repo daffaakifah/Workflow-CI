@@ -66,7 +66,7 @@ jobs:
         run: |
           mlflow --version
           mlflow experiments create --help
-          mlflow experiments search --help
+          mlflow experiments list --help
 
       - name: Initialize MLflow Experiment
         shell: bash -l {0}
@@ -74,8 +74,8 @@ jobs:
           echo "Creating or verifying MLflow experiment named 'Heart Disease Classification'..."
           mlflow experiments create --experiment-name "Heart Disease Classification" || echo "Experiment already exists"
           
-          # Get the experiment ID from the experiments search with proper flags and filter string
-          EXPERIMENT_ID=$(mlflow experiments search --view active_only --filter-string "name = 'Heart Disease Classification'" --output json | jq -r '.[0].experiment_id')
+          # Get the experiment ID by listing experiments and filtering by name
+          EXPERIMENT_ID=$(mlflow experiments list --view active_only | grep 'Heart Disease Classification' | awk '{print $1}')
           
           if [ -z "$EXPERIMENT_ID" ] || [ "$EXPERIMENT_ID" == "null" ]; then
             echo "Error: Experiment ID not found, aborting workflow."
@@ -92,7 +92,8 @@ jobs:
 
       - name: Run MLflow Project with modelling.py script
         shell: bash -l {0}
-        run: mlflow run MLProject -e train -P script_name=modelling.py --experiment-id $EXPERIMENT_ID
+        run: |
+          mlflow run MLProject -e train -P script_name=modelling.py --experiment-id $EXPERIMENT_ID
 
       - name: Get latest MLflow run_id
         id: mlflow_run_id
