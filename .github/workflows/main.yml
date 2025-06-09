@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 env:
-  REQUIREMENTS_FILE: Workflow-CI/MLProject/requirements.txt
+  REQUIREMENTS_FILE: MLProject/requirements.txt
   DOCKER_IMAGE: daffablqs/workflow-ci
   MLFLOW_PROJECT: .
   REPO: ${{ github.repository }}
