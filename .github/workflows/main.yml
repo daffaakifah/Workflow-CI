@@ -28,6 +28,11 @@ jobs:
           use-mamba: true
           cache: true
 
+      - name: Update Conda and Pip
+        run: |
+          conda update -n base -c defaults conda --yes
+          conda install pip --yes
+
       - name: Run MLflow Project with modelling.py
         shell: bash -l {0}
         run: |
