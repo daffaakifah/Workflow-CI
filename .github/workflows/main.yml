@@ -21,14 +21,14 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.9'
+          python-version: '3.12.7'
 
       - name: Setup Python Environment and Install Dependencies
         run: |
           python -m venv .venv
           source .venv/bin/activate
           python -m pip install --upgrade pip
-          pip install mlflow docker
+          pip install mlflow docker dagshub joblib matplotlib seaborn pandas scikit-learn
 
       - name: Run MLflow Project with modelling.py
         run: |
