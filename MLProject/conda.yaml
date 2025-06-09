@@ -1,5 +1,6 @@
 channels:
   - conda-forge
+  - defaults  # Add the default channel
 
 dependencies:
   - python=3.11
