@@ -1,0 +1,15 @@
+artifact_uri: file:///home/runner/work/Workflow-CI/Workflow-CI/mlruns/556570221108914551/eed29b23079146acb85bf27052b57f10/artifacts
+end_time: 1749519462355
+entry_point_name: ''
+experiment_id: '556570221108914551'
+lifecycle_stage: active
+run_id: eed29b23079146acb85bf27052b57f10
+run_name: colorful-lamb-331
+run_uuid: eed29b23079146acb85bf27052b57f10
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1749519450241
+status: 3
+tags: []
+user_id: runner
