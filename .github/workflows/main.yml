@@ -28,7 +28,7 @@ jobs:
         run: |
           mlflow run MLProject --env-manager=local --experiment-name "Heart Disease Classification"
 
-      - name: Debug: List mlruns directory content
+      - name: Debug List mlruns directory content
         run: |
           echo "Listing contents of mlruns directory recursively..."
           ls -lR mlruns
