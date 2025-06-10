@@ -1,0 +1,15 @@
+artifact_uri: file:///home/runner/work/Workflow-CI/Workflow-CI/mlruns/556570221108914551/7b80ee965c694aee9dca10ef65fe98f3/artifacts
+end_time: 1749519955433
+entry_point_name: ''
+experiment_id: '556570221108914551'
+lifecycle_stage: active
+run_id: 7b80ee965c694aee9dca10ef65fe98f3
+run_name: sedate-wolf-909
+run_uuid: 7b80ee965c694aee9dca10ef65fe98f3
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1749519947263
+status: 3
+tags: []
+user_id: runner
