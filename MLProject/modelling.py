@@ -13,7 +13,7 @@ import mlflow
 import mlflow.sklearn
 from mlflow.models.signature import infer_signature
 
-# Set experiment sekali di awal (agar sinkron dengan runs)
+# Set experiment sekali di awal
 mlflow.set_experiment("Heart Disease Classification")
 
 def save_confusion_matrix(y_true, y_pred, filepath):
@@ -27,10 +27,14 @@ def save_confusion_matrix(y_true, y_pred, filepath):
     plt.close()
 
 def main():
+    # Pastikan tidak ada run aktif yang mengganggu
+    if mlflow.active_run() is not None:
+        mlflow.end_run()
+
     # Autolog sklearn metrics dan parameters, tanpa log model otomatis
     mlflow.sklearn.autolog(log_models=False)
 
-    data_path = "heart_preprocessing.csv"  
+    data_path = "heart_preprocessing.csv"
     df = pd.read_csv(data_path)
 
     X = df.drop(columns=['target'])
@@ -48,7 +52,6 @@ def main():
         preds = model.predict(X_test)
         pred_probs = model.predict_proba(X_test)[:, 1]
 
-        # Hitung metrik evaluasi utama
         acc = accuracy_score(y_test, preds)
         prec = precision_score(y_test, preds)
         rec = recall_score(y_test, preds)
@@ -59,7 +62,6 @@ def main():
         tn, fp, fn, tp = cm.ravel()
         specificity = tn / (tn + fp)
 
-        # Log metrik manual
         mlflow.log_metric("accuracy", acc)
         mlflow.log_metric("precision", prec)
         mlflow.log_metric("recall", rec)
@@ -67,17 +69,14 @@ def main():
         mlflow.log_metric("roc_auc", roc_auc)
         mlflow.log_metric("specificity", specificity)
 
-        # Simpan dan log confusion matrix
         cm_path = os.path.join(artifact_dir, "confusion_matrix.png")
         save_confusion_matrix(y_test, preds, cm_path)
         mlflow.log_artifact(cm_path)
 
-        # Simpan dan log model manual (joblib)
         model_pkl_path = os.path.join(artifact_dir, "model.pkl")
         joblib.dump(model, model_pkl_path)
         mlflow.log_artifact(model_pkl_path, artifact_path="model")
 
-        # Buat input example dan infer signature untuk logging model mlflow
         input_example = X_train.head(5)
         signature = infer_signature(X_train, model.predict(X_train))
 
