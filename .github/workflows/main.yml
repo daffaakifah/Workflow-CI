@@ -37,7 +37,7 @@ jobs:
         id: get_model_path
         run: |
           MODEL_PATH=$(find mlruns -type d -path "*/model" | sort -r | head -n 1)
-          echo $MODEL_PATH
+          echo "::set-output name=path::$MODEL_PATH"
 
       - name: Commit and push model artifact to GitHub
         run: |
@@ -54,8 +54,8 @@ jobs:
 
       - name: Build Docker image from latest model artifact
         run: |
-          echo "MODEL_PATH is $MODEL_PATH"
-          mlflow models build-docker -m "$MODEL_PATH"
+          echo "MODEL_PATH is ${{ steps.get_model_path.outputs.path }}"
+          mlflow models build-docker -m "${{ steps.get_model_path.outputs.path }}"
 
       - name: Push Docker image to Docker Hub
         run: |
