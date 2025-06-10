@@ -37,7 +37,7 @@ jobs:
         id: get_model_path
         run: |
           echo "Searching for model artifact folder..."
-          MODEL_PATH=$(find mlruns -type d -path "*/artifacts/random_forest_model" | sort -r | head -n 1)
+          MODEL_PATH=$(find mlruns -type d -path "*/artifacts/model" | sort -r | head -n 1)
           echo "Latest model artifact path found: $MODEL_PATH"
           if [ -z "$MODEL_PATH" ]; then
             echo "Error: No model artifact path found!"
