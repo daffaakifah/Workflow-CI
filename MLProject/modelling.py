@@ -13,6 +13,8 @@ import mlflow
 import mlflow.sklearn
 from mlflow.models.signature import infer_signature
 
+mlflow.set_experiment("Heart Disease Classification")
+
 def save_confusion_matrix(y_true, y_pred, filepath):
     cm = confusion_matrix(y_true, y_pred)
     plt.figure(figsize=(6,6))
