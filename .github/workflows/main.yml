@@ -55,7 +55,7 @@ jobs:
       - name: Build Docker image from latest model artifact
         run: |
           echo "MODEL_PATH is ${{ steps.get_model_path.outputs.path }}"
-          mlflow models build-docker -m "${{ steps.get_model_path.outputs.path }}"
+          mlflow models build-docker -m "${{ steps.get_model_path.outputs.MODEL_PATH }}" -t workflow-ci-model:latest
 
       - name: Push Docker image to Docker Hub
         run: |
