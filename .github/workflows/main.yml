@@ -1,59 +1,58 @@
-name: MLflow Retrain and Docker CI
+name: Retrain and Deploy Model
 
 on:
+  workflow_dispatch:         # Trigger manual run
   push:
     branches:
-      - main
-  workflow_dispatch:
+      - main                # Trigger ketika push ke main branch (bisa disesuaikan)
 
 env:
-  REQUIREMENTS_FILE: MLProject/requirements.txt
   DOCKER_IMAGE: daffablqs/workflow-ci
-  MLFLOW_PROJECT: MLProject
-  REPO: ${{ github.repository }}
-  BRANCH: main
+  PYTHON_VERSION: 3.11
 
 jobs:
-  retrain:
+  retrain-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
+    - name: Checkout repository
+      uses: actions/checkout@v3
 
-      - name: Setup Python 3.11
-        uses: actions/setup-python@v4
-        with:
-          python-version: 3.11
+    - name: Set up Python ${{ env.PYTHON_VERSION }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
 
-      - name: Install pip dependencies from requirements.txt
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r ${{ env.REQUIREMENTS_FILE }}
-          pip install mlflow==2.19.0 dagshub==0.2.10
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install mlflow docker
 
-      - name: Run MLflow project retrain
-        run: |
-          mlflow run MLProject   
+    - name: Run MLflow Project
+      run: mlflow run . -e main
 
-      - name: Commit and push model artifacts
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add mlruns/
-          git commit -m "Update MLflow retrained model artifacts" || echo "No changes to commit"
-          git push origin ${{ env.BRANCH }}
+    - name: Get latest MLflow run ID
+      id: get_run_id
+      run: |
+        RUN_ID=$(mlflow runs list --order-by start_time | head -n 1 | awk '{print $1}')
+        echo "run_id=$RUN_ID" >> $GITHUB_OUTPUT
 
-      - name: Build Docker image
-        run: |
-          mlflow build-docker -p ${{ env.MLFLOW_PROJECT }} -t ${{ env.DOCKER_IMAGE }}
+    - name: Upload MLflow artifacts to GitHub (as an example)
+      uses: actions/upload-artifact@v3
+      with:
+        name: mlflow-artifacts-${{ steps.get_run_id.outputs.run_id }}
+        path: ./mlruns  # Sesuaikan path dengan lokasi artefak mlflow Anda
 
-      - name: Login to Docker Hub
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
+    - name: Build Docker Image using MLflow
+      run: mlflow build-docker . -t $DOCKER_IMAGE:latest
 
-      - name: Push Docker image
-        run: |
-          docker push ${{ env.DOCKER_IMAGE }}
+    - name: Login to Docker Hub
+      uses: docker/login-action@v2
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+
+    - name: Push Docker Image to Docker Hub
+      run: |
+        docker push $DOCKER_IMAGE:latest
