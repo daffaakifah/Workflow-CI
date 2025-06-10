@@ -1,0 +1,15 @@
+artifact_uri: file:///home/runner/work/Workflow-CI/Workflow-CI/mlruns/556570221108914551/106ecb52f543475ea08b7aa487e54ae3/artifacts
+end_time: 1749519712457
+entry_point_name: ''
+experiment_id: '556570221108914551'
+lifecycle_stage: active
+run_id: 106ecb52f543475ea08b7aa487e54ae3
+run_name: treasured-shark-756
+run_uuid: 106ecb52f543475ea08b7aa487e54ae3
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1749519703307
+status: 3
+tags: []
+user_id: runner
