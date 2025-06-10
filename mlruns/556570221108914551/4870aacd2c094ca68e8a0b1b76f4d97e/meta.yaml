@@ -1,0 +1,15 @@
+artifact_uri: file:///home/runner/work/Workflow-CI/Workflow-CI/mlruns/556570221108914551/4870aacd2c094ca68e8a0b1b76f4d97e/artifacts
+end_time: 1749518821362
+entry_point_name: ''
+experiment_id: '556570221108914551'
+lifecycle_stage: active
+run_id: 4870aacd2c094ca68e8a0b1b76f4d97e
+run_name: calm-robin-629
+run_uuid: 4870aacd2c094ca68e8a0b1b76f4d97e
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1749518812097
+status: 3
+tags: []
+user_id: runner
