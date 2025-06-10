@@ -13,6 +13,7 @@ import mlflow
 import mlflow.sklearn
 from mlflow.models.signature import infer_signature
 
+# Set experiment sekali di awal (agar sinkron dengan runs)
 mlflow.set_experiment("Heart Disease Classification")
 
 def save_confusion_matrix(y_true, y_pred, filepath):
@@ -26,7 +27,7 @@ def save_confusion_matrix(y_true, y_pred, filepath):
     plt.close()
 
 def main():
-    mlflow.set_experiment("Heart Disease Classification")
+    # Autolog sklearn metrics dan parameters, tanpa log model otomatis
     mlflow.sklearn.autolog(log_models=False)
 
     data_path = "heart_preprocessing.csv"  
@@ -47,14 +48,13 @@ def main():
         preds = model.predict(X_test)
         pred_probs = model.predict_proba(X_test)[:, 1]
 
-        # Metrik utama
+        # Hitung metrik evaluasi utama
         acc = accuracy_score(y_test, preds)
         prec = precision_score(y_test, preds)
         rec = recall_score(y_test, preds)
         f1 = f1_score(y_test, preds)
         roc_auc = roc_auc_score(y_test, pred_probs)
 
-        # Specificity
         cm = confusion_matrix(y_test, preds)
         tn, fp, fn, tp = cm.ravel()
         specificity = tn / (tn + fp)
@@ -77,7 +77,7 @@ def main():
         joblib.dump(model, model_pkl_path)
         mlflow.log_artifact(model_pkl_path, artifact_path="model")
 
-        # Buat input example dan infer signature
+        # Buat input example dan infer signature untuk logging model mlflow
         input_example = X_train.head(5)
         signature = infer_signature(X_train, model.predict(X_train))
 
