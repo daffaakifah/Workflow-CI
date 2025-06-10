@@ -38,11 +38,7 @@ jobs:
         run: |
           MODEL_PATH=$(find mlruns -type d -path "*/artifacts/model" | sort -r | head -n 1)
           echo "Latest model artifact path found: $MODEL_PATH"
-          if [ -z "$MODEL_PATH" ]; then
-            echo "Error: No model artifact path found!"
-            exit 1
-          fi
-          echo "MODEL_PATH=$MODEL_PATH" >> $GITHUB_ENV
+          echo "::set-output name=MODEL_PATH::$MODEL_PATH"
 
       - name: Commit and push model artifact to GitHub
         run: |
