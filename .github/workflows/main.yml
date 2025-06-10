@@ -1,10 +1,7 @@
 name: Retrain and Deploy Model
 
 on:
-  workflow_dispatch:         # Trigger manual run
-  push:
-    branches:
-      - main                # Trigger ketika push ke main branch (bisa disesuaikan)
+ - main              
 
 env:
   DOCKER_IMAGE: daffablqs/workflow-ci
