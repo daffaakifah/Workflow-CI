@@ -27,7 +27,8 @@ jobs:
 
       - name: Run MLflow Project
         run: |
-          mlflow run MLProject --env-manager=local
+          mlflow run MLProject --env-manager=local --experiment-name "Heart Disease Classification"
+
 
       - name: Commit and push model artifact to GitHub
         run: |
