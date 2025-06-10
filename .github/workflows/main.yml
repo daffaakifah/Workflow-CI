@@ -1,7 +1,9 @@
-name: Retrain and Deploy Model
+name: Auto Retrain and Deploy Model
 
 on:
- - main              
+  push:
+    branches:
+      - main         
 
 env:
   DOCKER_IMAGE: daffablqs/workflow-ci
@@ -26,7 +28,7 @@ jobs:
         pip install -r requirements.txt
         pip install mlflow docker
 
-    - name: Run MLflow Project
+    - name: Run MLflow Project for retraining
       run: mlflow run . -e main
 
     - name: Get latest MLflow run ID
@@ -35,11 +37,11 @@ jobs:
         RUN_ID=$(mlflow runs list --order-by start_time | head -n 1 | awk '{print $1}')
         echo "run_id=$RUN_ID" >> $GITHUB_OUTPUT
 
-    - name: Upload MLflow artifacts to GitHub (as an example)
+    - name: Upload MLflow artifacts to GitHub Actions
       uses: actions/upload-artifact@v3
       with:
         name: mlflow-artifacts-${{ steps.get_run_id.outputs.run_id }}
-        path: ./mlruns  # Sesuaikan path dengan lokasi artefak mlflow Anda
+        path: ./mlruns
 
     - name: Build Docker Image using MLflow
       run: mlflow build-docker . -t $DOCKER_IMAGE:latest
@@ -51,5 +53,4 @@ jobs:
         password: ${{ secrets.DOCKER_PASSWORD }}
 
     - name: Push Docker Image to Docker Hub
-      run: |
-        docker push $DOCKER_IMAGE:latest
+      run: docker push $DOCKER_IMAGE:latest
