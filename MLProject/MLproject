@@ -1,4 +1,4 @@
-name: heart-mlflow-project
+name: Heart Disease Classification
 
 entry_points:
   main:
