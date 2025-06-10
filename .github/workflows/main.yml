@@ -36,7 +36,7 @@ jobs:
       - name: Get latest MLflow model artifact path
         id: get_model_path
         run: |
-          MODEL_PATH=$(find mlruns -type d -path "*/artifacts/model" | sort -r | head -n 1)
+          MODEL_PATH=$(find mlruns -type d -path "*/model" | sort -r | head -n 1)
           echo $MODEL_PATH
 
       - name: Commit and push model artifact to GitHub
