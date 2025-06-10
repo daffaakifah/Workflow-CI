@@ -54,7 +54,7 @@ jobs:
 
       - name: Build Docker image from latest model artifact
         run: |
-          mlflow models build-docker -m $MODEL_PATH -n msml-model
+          mlflow models build-docker -m $MODEL_PATH
 
       - name: Push Docker image to Docker Hub
         run: |
