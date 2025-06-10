@@ -34,7 +34,7 @@ jobs:
 
       - name: Run MLflow project retrain
         run: |
-          mlflow run Workflow-CI/MLProject -e main  
+          mlflow run MLProject   
 
       - name: Commit and push model artifacts
         run: |
