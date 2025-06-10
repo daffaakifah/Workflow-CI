@@ -54,12 +54,7 @@ jobs:
 
       - name: Build Docker image from latest model artifact
         run: |
-          if [ -z "$MODEL_PATH" ]; then
-            echo "Error: MODEL_PATH is empty. Cannot build Docker image."
-            exit 1
-          else
-            mlflow models build-docker -m "$MODEL_PATH"
-          fi
+          mlflow models build-docker -m $MODEL_PATH -n msml-model
 
       - name: Push Docker image to Docker Hub
         run: |
