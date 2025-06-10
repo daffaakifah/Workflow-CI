@@ -59,5 +59,8 @@ jobs:
 
       - name: Push Docker image to Docker Hub
         run: |
-          docker tag workflow-ci-model:latest ${{ secrets.DOCKER_USERNAME }}/workflow-ci:latest
-          docker push ${{ secrets.DOCKER_USERNAME }}/workflow-ci:latest
+          docker tag workflow-ci-model:latest daffablqs/workflow-ci:latest
+          docker push daffablqs/workflow-ci:latest
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
