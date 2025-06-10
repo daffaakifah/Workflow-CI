@@ -3,9 +3,8 @@ name: MLflow CI
 on:
   push:
     branches:
-      - main  # Ubah sesuai nama branch utama Anda, misal 'main' atau 'master'
-    # Hilangkan pembatasan 'paths' agar trigger pada seluruh perubahan push
-  workflow_dispatch:  # Tetap bisa manual trigger juga
+      - main
+  workflow_dispatch:
 
 jobs:
   train-log-and-dockerize:
@@ -29,6 +28,22 @@ jobs:
         run: |
           mlflow run MLProject --env-manager=local --experiment-name "Heart Disease Classification"
 
+      - name: Debug: List mlruns directory content
+        run: |
+          echo "Listing contents of mlruns directory recursively..."
+          ls -lR mlruns
+
+      - name: Get latest MLflow model artifact path
+        id: get_model_path
+        run: |
+          echo "Searching for model artifact folder..."
+          MODEL_PATH=$(find mlruns -type d -path "*/artifacts/random_forest_model" | sort -r | head -n 1)
+          echo "Latest model artifact path found: $MODEL_PATH"
+          if [ -z "$MODEL_PATH" ]; then
+            echo "Error: No model artifact path found!"
+            exit 1
+          fi
+          echo "MODEL_PATH=$MODEL_PATH" >> $GITHUB_ENV
 
       - name: Commit and push model artifact to GitHub
         run: |
@@ -40,18 +55,17 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Get latest MLflow model artifact path
-        id: get_model_path
-        run: |
-          MODEL_PATH=$(find mlruns -type d -path "*/artifacts/random_forest_model" | sort -r | head -n 1)
-          echo "Latest model path: $MODEL_PATH"
-          echo "MODEL_PATH=$MODEL_PATH" >> $GITHUB_ENV
-
       - name: Log in to Docker Hub
         run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
 
       - name: Build Docker image from latest model artifact
-        run: mlflow models build-docker -m $MODEL_PATH
+        run: |
+          if [ -z "$MODEL_PATH" ]; then
+            echo "Error: MODEL_PATH is empty. Cannot build Docker image."
+            exit 1
+          else
+            mlflow models build-docker -m "$MODEL_PATH"
+          fi
 
       - name: Push Docker image to Docker Hub
         run: |
