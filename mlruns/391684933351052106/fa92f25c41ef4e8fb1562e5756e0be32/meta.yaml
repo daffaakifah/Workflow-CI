@@ -1,0 +1,15 @@
+artifact_uri: file:///home/runner/work/Workflow-CI/Workflow-CI/mlruns/391684933351052106/fa92f25c41ef4e8fb1562e5756e0be32/artifacts
+end_time: 1749541558541
+entry_point_name: ''
+experiment_id: '391684933351052106'
+lifecycle_stage: active
+run_id: fa92f25c41ef4e8fb1562e5756e0be32
+run_name: treasured-auk-40
+run_uuid: fa92f25c41ef4e8fb1562e5756e0be32
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1749541549232
+status: 3
+tags: []
+user_id: runner
