@@ -57,6 +57,9 @@ jobs:
           echo "MODEL_PATH is ${{ steps.get_model_path.outputs.path }}"
           mlflow models build-docker -m "${{ steps.get_model_path.outputs.path }}"
 
+      - name: Docker images for debug
+        run: docker images
+
       - name: Push Docker image to Docker Hub
         run: |
           docker tag workflow-ci-model:latest daffablqs/workflow-ci:latest
