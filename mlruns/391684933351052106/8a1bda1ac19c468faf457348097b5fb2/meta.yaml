@@ -1,0 +1,15 @@
+artifact_uri: file:///home/runner/work/Workflow-CI/Workflow-CI/mlruns/391684933351052106/8a1bda1ac19c468faf457348097b5fb2/artifacts
+end_time: 1749796343144
+entry_point_name: ''
+experiment_id: '391684933351052106'
+lifecycle_stage: active
+run_id: 8a1bda1ac19c468faf457348097b5fb2
+run_name: invincible-bear-178
+run_uuid: 8a1bda1ac19c468faf457348097b5fb2
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1749796332517
+status: 3
+tags: []
+user_id: runner
