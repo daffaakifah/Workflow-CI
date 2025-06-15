@@ -1,0 +1,15 @@
+artifact_uri: file:///home/runner/work/Workflow-CI/Workflow-CI/mlruns/391684933351052106/389614f38fae4672bd2c7793c6a048b6/artifacts
+end_time: 1749973134461
+entry_point_name: ''
+experiment_id: '391684933351052106'
+lifecycle_stage: active
+run_id: 389614f38fae4672bd2c7793c6a048b6
+run_name: casual-shrew-465
+run_uuid: 389614f38fae4672bd2c7793c6a048b6
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1749973122651
+status: 3
+tags: []
+user_id: runner
